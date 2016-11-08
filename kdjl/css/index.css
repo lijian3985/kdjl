@@ -1,0 +1,76 @@
+*{
+			margin:0;
+			padding: 0;
+		}
+		#content{
+			width:1020px;
+			height: 600px;
+			border:solid 2px #000;
+			background: url(../img/dkjn.jpg) ;
+			position:relative;
+			margin:10px auto;
+		}
+		#top{
+			width:1020px;
+			height: 134px;
+			
+			margin:20px auto;
+		}
+		#left{
+			width:500px;
+			height:130px;
+			float:left;
+		}
+		#right{
+			width:480px;
+			height:130px;
+			float:right;
+			padding-left:20px;
+		}
+		.top_left,.top_right,.bottom{
+			width:86px;
+			height: 117px;
+			border:solid rgb(175,175,175) 2px;
+			float:left;
+			border-radius:5px;
+			padding:6px 7px;
+			position:relative;
+		}
+		.top_left{
+			margin-left:15px;
+		}
+		.top_right{
+			margin-right:15px;
+		}
+		#bottom{
+			width:910px;
+			margin:0 auto;
+		}
+		.bottom{
+			margin-left:11px;
+			border:none;
+			border : solid 1px pink;
+		}
+		.inpai{
+			border:1px solid #000;
+			margin-left:-1px ;
+			box-shadow:0 0 20px #000;;
+		}
+		#btn{
+			position:absolute;
+			top:50px;
+			left:35px;
+		}
+		#again{
+			position:absolute;
+			top:90px;
+			left:35px;
+		}
+		.fan{
+			width:86px;
+			height: 117px;
+			position:absolute;
+			left:630px;
+			top:510px;
+			z-index:10;
+		}

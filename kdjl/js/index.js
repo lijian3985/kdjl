@@ -1,0 +1,369 @@
+
+
+		$(function(){
+			$(window).mousemove(function(){
+				//  取消浏览器的默认事件 
+				event.preventDefault();	
+			})
+		});
+		window.onload = function(){
+			
+
+			// 用来存储当前移动的元素
+			var nowMove = [] ;
+			// 用来存储当前移动元素的父元素
+			var pareNowMove = [] ;
+			// 游戏初始化
+			var allPai =  52; //纸牌的数量
+			var timer = null ;
+			var z_index = 0 ;
+			
+
+			var picTop = [] ; // 用来存储图片的top值 ；
+			var picTop2 = [] ; //发牌是用来存储图片的top值 ；
+			var $cols = $(".bottom") ;
+			again();
+			
+			//  为每张牌添加事件
+			var $pais = $(".pai");
+			var prevMoveLeft = null ;
+			var prevMoveTop = null ;
+			var isclick = false ;	// 用来检测鼠标点击是否在牌上进行的
+			$("#content").on("mouseenter",".pai",function(eve){
+				if($(this).parent().hasClass("top_right")){
+					return false ;
+				}
+				$(this).addClass("inpai");
+				var $that = $(this) ;
+				$(this)[0].onmousedown = function(eve){
+					isclick = true ;
+					var inLeft = eve.pageX - $(this).offset().left ;
+					var inTop = eve.pageY - $(this).offset().top ;
+					var $that = $(this) ;	
+					prevMoveLeft = $that.css("left") ;
+					prevMoveTop = $that.css("top") ;				
+					$("#content").bind("mousemove", function(eve){
+						// 判断是否是每列的最后一张牌或是右上角的牌
+						if($that.next().length != 0 || $that.parent().hasClass("top_right")){
+							return false ;
+						}
+						else{
+							var left = eve.pageX - inLeft ;
+							var top = eve.pageY - inTop ;
+							$that.offset({"left":left,"top":top}).css("z-index","10000000");
+						}
+						
+					});										
+							
+				};
+
+				$(window)[0].onmouseup=function(){
+						//之前是否在牌上点击的
+						if(!isclick){
+							return ;
+						}
+						isclick = false ;
+						// 判断是否是每列的最后一张牌
+						if($that.next().length != 0){
+							return false ;							
+						}
+						else{
+							// 判断是否匹配成功
+							var istrue = false ;
+
+							// 移动位置匹配底部区
+							if(!istrue){
+								for(var attr in picTop){
+									var top = $cols.eq(attr).offset().top + picTop[attr] -70 ;
+									var bottom = top +	100 ;
+									var left = $cols.eq(attr).offset().left - 40;
+									var right = left + 90 ;
+									
+									if($that.offset().top>=top&&$that.offset().top<=bottom){
+										if($that.offset().left>=left&&$that.offset().left<=right){
+											//  对花色的判断
+											
+											if($cols.eq(attr).children().length!=0){
+												var matchSrc = $cols.eq(attr).children().last().children().first().attr("src");
+												var moveSrc = $that.children().first().attr("src");
+												moveSrc = moveSrc.slice(4,8) ;
+												matchSrc = matchSrc.slice(4,8) ;
+												moveSrc = moveSrc.split("-");
+												matchSrc = matchSrc.split("-");
+											}else{
+												var zero = true ;
+											}
+											
+											if(zero || Math.abs(matchSrc[0]-moveSrc[0])==1 ||Math.abs(matchSrc[0]-moveSrc[0])==3 ){
+												//对数值的判断
+												if(zero || matchSrc[1]-moveSrc[1] == 1){
+													zero = false ;
+													// 检测被拖动的这张牌来自哪个父元素
+													if($that.parent().hasClass("bottom")){
+														var this_ind = $that.parent().index();
+														picTop[this_ind] = picTop[this_ind] - 28 ;
+														if(picTop[this_ind]<=0){
+															picTop[this_ind] = 6 ;
+														}
+														if(picTop[this_ind]<=($that.parent().children().length-2)*28+6){
+															picTop[this_ind] = ($that.parent().children().length-1)*28+6 ;
+															console.log($that.parent().children().length);
+														}
+													}
+													
+													$that.css("top",picTop[attr]).css("left",7);
+													picTop[attr] = picTop[attr] + 28 ;
+													nowMove.push($that) ;
+													pareNowMove.push($that.parent());
+													$cols.eq(attr).append($that);
+													istrue = true ;//alert("1");
+													break ;
+												}
+											}
+										}										
+									}
+								}
+							}
+
+							// 匹配左上脚区域
+							if(!istrue){
+								var $topLeft = $(".top_left") ;
+								for(var attr in $topLeft){
+									if(typeof $topLeft[attr] === "number"){break ;}
+									var top = $($topLeft[attr]).offset().top - 40 ;
+									var bottom = top + 100 ;
+									var left = $($topLeft[attr]).offset().left -40 ;
+									var right = left + 80 ;
+									//  对区域的判断,和该区域是否有牌
+									if($that.offset().top>=top&&$that.offset().top<=bottom&&$($topLeft[attr]).children().length== 0 ){
+										//  对区域的判断
+										if($that.offset().left>=left&&$that.offset().left<=right){
+											var this_ind = $that.parent().index();
+											picTop[this_ind] = picTop[this_ind] - 28 ;
+											if(picTop[this_ind]<=0){
+												picTop[this_ind] = 6 ;
+											}
+											if(picTop[this_ind]<=($that.parent().children().length-2)*28+6){
+												picTop[this_ind] = ($that.parent().children().length-1)*28+6 ;
+												console.log($that.parent().children().length);
+											}
+											$that.css("top",$($topLeft[attr]).offset().top-25).css("left",7);
+											nowMove.push($that) ;
+											pareNowMove.push($that.parent());
+											$($topLeft[attr]).append($that); 
+											istrue = true ;//alert("2");
+											break ;	
+										}									
+									}
+								}
+							}
+							//匹配右上角区域
+							if(!istrue){
+								var $topRight = $(".top_right") ;
+								var over = 0 ;
+								for(var attr in $topRight){
+									if(typeof $topRight[attr] === "number"){break ;}
+									var top = $($topRight[attr]).offset().top - 30 ;
+									var bottom = top + 80 ;
+									var left = $($topRight[attr]).offset().left -30 ;
+									var right = left + 60 ;
+									//  对区域的判断,和该区域是否有牌
+									if($(($topRight[attr])).children().length != 0){
+										var matchSrc = $(($topRight[attr])).children().last().children().first().attr("src");
+										matchSrc = matchSrc.slice(4,8) ;
+										matchSrc = matchSrc.split("-");
+									}
+									var moveSrc = $that.children().first().attr("src");
+									moveSrc = moveSrc.slice(4,8) ;
+									moveSrc = moveSrc.split("-");
+									// 匹配区域
+									if($that.offset().top>=top&&$that.offset().top<=bottom){
+										//  对区域的判断
+										if($that.offset().left>=left&&$that.offset().left<=right){
+											//	判断该区域是否我空
+											if($(($topRight[attr])).children().length == 0&&moveSrc[1]==1){
+												var this_ind = $that.parent().index();
+												picTop[this_ind] = picTop[this_ind] - 28 ;
+												if(picTop[this_ind]<=0){
+													picTop[this_ind] = 6 ;
+												}
+												if(picTop[this_ind]<=($that.parent().children().length-2)*28+6){
+													picTop[this_ind] = ($that.parent().children().length-1)*28+6 ;
+													console.log($that.parent().children().length);
+												}
+												$that.css("top",$($topRight[attr]).offset().top-25).css("left",7);
+												nowMove.push($that) ;
+												pareNowMove.push($that.parent());
+												$($topRight[attr]).append($that); 
+												istrue = true ;//alert("2");
+												over = $topRight.children().length;
+												//console.log(over);
+												break ;	
+											}
+
+											//	不为空
+											if( matchSrc&&moveSrc[0]==matchSrc[0]){
+												if(matchSrc[1]-moveSrc[1]==-1){
+													var this_ind = $that.parent().index();
+													picTop[this_ind] = picTop[this_ind] - 28 ;
+													if(picTop[this_ind]<=0){
+														picTop[this_ind] = 6 ;
+													}
+													if(picTop[this_ind]<=($that.parent().children().length-2)*28+6){
+														picTop[this_ind] = ($that.parent().children().length-1)*28+6 ;
+														console.log($that.parent().children().length);
+													}
+													$that.css("top",$($topRight[attr]).offset().top-25).css("left",7);
+													nowMove.push($that) ;
+													pareNowMove.push($that.parent());
+													$($topRight[attr]).append($that); 
+													istrue = true ;
+													over = $topRight.children().length;
+													//console.log(over);
+													if(over == 52){
+														alert("恭喜你，取得胜利！！！");
+													}
+													break ;	
+												}
+											}
+											
+										}									
+									}
+								}
+							}
+							if(!istrue){
+								$that.animate({"left":7,"top":prevMoveTop},100) ;
+							}
+							z_index++ ;
+							$("#content").unbind("mousemove");
+							$that.css("z-index",z_index);
+						}
+					}				
+			});
+			$("#content").on("mouseleave",".pai",function(){
+				$(this).removeClass("inpai");
+			});
+			
+			//	实现回退功能
+			$("#btn").click(function(){
+				if(nowMove.length!=0&&pareNowMove!=0){
+					var nm = nowMove.pop();
+					var pnm = pareNowMove.pop();
+					var willLeft = 7;
+					var willTop = 0 ;
+					if(nm.parent().hasClass("bottom")){
+						picTop[nm.parent().index()] = picTop[nm.parent().index()]-28 ;
+					}
+					if(pnm.hasClass("bottom")){
+						willTop = picTop[pnm.index()];
+						picTop[pnm.index()] = picTop[pnm.index()] + 28 ;
+					}else{
+						willTop = pnm.offset().top - 25 ;
+					}
+					
+					var left = nm.offset().left;
+					var top = nm.offset().top;
+					pnm.append(nm) ;
+					z_index ++ ;
+					nm.css("z-index",z_index);
+					nm.offset({"left":left,"top":top});
+					nm.animate({"left":willLeft,"top":willTop},500);
+				}
+			});
+			$("#again").click(function(){
+				$(".bottom,.top_left,.top_right").empty();
+				again();
+			});
+
+			// 重新开始
+			function again(){
+				$(".fan").css("display","block");
+				picTop = [] ;
+				picTop2 = [] ;
+				$cols = $(".bottom") ;
+				var arrSrc = [
+				"1-1.jpg","1-2.jpg","1-3.jpg","1-4.jpg",
+				"1-5.jpg","1-6.jpg","1-7.jpg","1-8.jpg",
+				"1-9.jpg","1-10.jpg","1-11.jpg","1-12.jpg",
+				"1-13.jpg","2-1.jpg","2-2.jpg","2-3.jpg",
+				"2-4.jpg","2-5.jpg","2-6.jpg","2-7.jpg",
+				"2-8.jpg","2-9.jpg","2-10.jpg","2-11.jpg",
+				"2-12.jpg","2-13.jpg","3-1.jpg","3-2.jpg",
+				"3-3.jpg","3-4.jpg","3-5.jpg","3-6.jpg",
+				"3-7.jpg","3-8.jpg","3-9.jpg","3-10.jpg",
+				"3-11.jpg","3-12.jpg","3-13.jpg","4-1.jpg",
+				"4-2.jpg","4-3.jpg","4-4.jpg","4-5.jpg",
+				"4-6.jpg","4-7.jpg","4-8.jpg","4-9.jpg",
+				"4-10.jpg","4-11.jpg","4-12.jpg","4-13.jpg"
+				] ;  //  把所有纸牌图片的src存在数组中
+				for(var i = 0;i<8;i++){
+					picTop[i] = 6 ;
+					picTop2[i] = 6 ;
+				}
+				var ind2 = 0 ;
+				var rand = 52 ; // 用于创建随机数 ；
+				z_index = 0 ; 
+				for(i = 0;i<allPai;i++){
+					var ind = parseInt(Math.random()*rand);
+					rand -- ;
+					var src = arrSrc[ind] ;
+					arrSrc.splice(ind,1);
+					var $div = $("<div></div>").css(
+						{"position":"absolute","width":"86px","height":"117px","border-radius":"5px","overflow":"hidden","top":picTop[ind2]}).attr("class","pai") ;
+					picTop[ind2] +=28 ; 
+					var $pic = $("<img />").attr("src","img/"+src);
+					$div.append($pic) ;
+					$cols.eq(ind2).append($div);
+					ind2++ ;
+					if(ind2==8){
+						ind2=0 ;
+					}
+				}
+				$(".bottom div").offset({"left":630,"top":510});
+				fapai();
+			}
+
+			//  实现发牌动画
+			function fapai(){
+				var j = 0 ;
+				var i = 0 ;
+				var jishu = 0 ;
+				if(timer){
+					clearInterval(timer) ;
+				}
+				timer = setInterval(function(){
+					var pics2 = $cols.eq(i).children().eq(j);
+					var top = picTop2[i] ;
+					var left1 = 700 - pics2.parent().offset().left ;
+					var top1 = 480 - pics2.parent().offset().top ;
+					var time2 = 400 - 40*i;
+					var top2 = 400 - pics2.parent().offset().top ;
+					var left2 = 850 - pics2.parent().offset().left ;
+					var src = pics2.children().eq(0).attr("src");
+					pics2.children().eq(0).attr("src","img/000.jpg");
+					pics2.css("z-index","11");
+					pics2.animate({"left":left1,"top":top1},100).animate({
+						"left":left2,
+						"top":top2,
+						"width":0
+					},100,function(){
+						pics2.css("z-index",1);
+						pics2.children().eq(0).attr("src",src);
+					}).animate({"left":7,"top":top,"width":86},time2,function(){
+						pics2.css("z-index",0)
+					}) ;
+					picTop2[i] +=28 ;
+					i ++ ;
+					if(i==8){
+						i=0 ;
+						j++ ;
+					}
+					jishu++ ;
+					if(jishu == 52){
+						clearInterval(timer);
+						$(".fan").css("display","none");
+					}
+				},100);
+			}
+			
+		}
